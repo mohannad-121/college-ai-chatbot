@@ -1,1 +1,11 @@
-
+__pycache__/
+*.pt
+*.bin
+*.csv
+*.zip
+*.tar.gz
+*.h5
+*.json
+*.log
+.venv/
+.env
