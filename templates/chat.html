@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- Guide Sidebar -->
+  <div class="guide-sidebar">
+    <h3>💡 You can ask me about:</h3>
+    <ul>
+      <li>College timing</li>
+      <li>Location / Address</li>
+      <li>Admission process</li>
+      <li>Courses offered</li>
+      <li>Scholarships</li>
+      <li>Library facilities</li>
+      <li>Events</li>
+      <li>Sports</li>
+      <li>Infrastructure</li>
+      <li>Uniform</li>
+      <li>Contact info</li>
+      <li>Committee details</li>
+      <li>Exams & Semester</li>
+      <li>College intake</li>
+      <li>President / HOD</li>
+    </ul>
+  </div>
+
+  <!-- Chat Section -->
+  <div class="chat-container">
+    <h2>Chatbot</h2>
+
+    <div id="chat-box">
+      <div class="message-wrapper">
+        <div class="message bot">Hi, how can I help you?</div>
+        <span class="timestamp">2:38 PM</span>
+      </div>
+    </div>
+
+    <input type="text" id="user-input" placeholder="Type message">
+    <div>
+      <button id="send-btn">Send</button>
+      <button id="speak-btn">Speak</button>
+    </div>
+
+    <div id="typing" class="typing-indicator" style="display:none;">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const speakBtn = document.getElementById("speak-btn");
+    const typing = document.getElementById("typing");
+
+    function formatTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    function sendMessage() {
+      const message = input.value.trim();
+      if (!message) return;
+
+      const time = formatTime();
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "message-wrapper";
+
+      const userMsg = document.createElement("div");
+      userMsg.className = "message user";
+      userMsg.textContent = message;
+
+      const timestamp = document.createElement("span");
+      timestamp.className = "timestamp";
+      timestamp.textContent = time;
+
+      wrapper.appendChild(userMsg);
+      wrapper.appendChild(timestamp);
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      input.value = "";
+      typing.style.display = "flex";
+
+      fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      })
+      .then(res => res.json())
+      .then(data => {
+        typing.style.display = "none";
+
+        const botWrapper = document.createElement("div");
+        botWrapper.className = "message-wrapper";
+
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+        botMsg.textContent = data.reply;
+
+        const botTime = document.createElement("span");
+        botTime.className = "timestamp";
+        botTime.textContent = formatTime();
+
+        botWrapper.appendChild(botMsg);
+        botWrapper.appendChild(botTime);
+        chatBox.appendChild(botWrapper);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+
+    speakBtn.addEventListener("click", () => {
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.onresult = function(event) {
+        input.value = event.results[0][0].transcript;
+        sendMessage();
+      };
+      recognition.start();
+    });
+  </script>
+</body>
+</html>
